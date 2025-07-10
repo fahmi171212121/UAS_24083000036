@@ -1,0 +1,167 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+
+/**
+ *
+ * @author myxps
+ */
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+
+public class RestaurantGUI extends JFrame {
+    private ArrayList<MenuItem> menuItems = new ArrayList<>();
+    private DefaultListModel<String> listModel = new DefaultListModel<>();
+    private JList<String> menuList;
+
+    public RestaurantGUI() {
+        setTitle("Restaurant Menu");
+        setSize(500, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        // Komponen GUI
+        menuList = new JList<>(listModel);
+        menuList.setBackground(new Color(255, 228, 225)); // Warna pink muda
+
+        JScrollPane scrollPane = new JScrollPane(menuList);
+
+        JTextField nameField = new JTextField(20);
+        JTextField priceField = new JTextField(30);
+        String[] categories = {"Appetizer", "Main Course", "Dessert", "Beverage"};
+        JComboBox<String> categoryCombo = new JComboBox<>(categories);
+
+        JButton addButton = new JButton("Add");
+        JButton updateButton = new JButton("Update");
+        JButton deleteButton = new JButton("Delete");
+
+        // Panel Form
+        JPanel formPanel = new JPanel(new GridLayout(4, 2, 5, 5));
+        formPanel.add(new JLabel("Nama:"));
+        formPanel.add(nameField);
+        formPanel.add(new JLabel("Harga:"));
+        formPanel.add(priceField);
+        formPanel.add(new JLabel("Kategori:"));
+        formPanel.add(categoryCombo);
+        formPanel.add(addButton);
+        formPanel.add(updateButton);
+
+        // Panel Utama
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(formPanel, BorderLayout.SOUTH);
+        mainPanel.add(deleteButton, BorderLayout.EAST);
+
+        // Set background warna pink
+        Color pinkColor = new Color(255, 192, 203);
+        mainPanel.setBackground(pinkColor);
+        formPanel.setBackground(pinkColor);
+        menuList.setBackground(new Color(255, 228, 225)); // Pink lembut
+
+        add(mainPanel);
+
+        // Event Handlers
+        addButton.addActionListener(e -> {
+            try {
+                String name = nameField.getText();
+                double price = Double.parseDouble(priceField.getText());
+                String category = (String) categoryCombo.getSelectedItem();
+
+                menuItems.add(new MenuItem(name, price, category));
+                refreshList();
+                clearFields(nameField, priceField);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Harga harus angka!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        updateButton.addActionListener(e -> {
+            int index = menuList.getSelectedIndex();
+            if (index >= 0) {
+                try {
+                    String name = nameField.getText();
+                    double price = Double.parseDouble(priceField.getText());
+                    String category = (String) categoryCombo.getSelectedItem();
+                    menuItems.set(index, new MenuItem(name, price, category));
+                    refreshList();
+                    clearFields(nameField, priceField);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Harga harus angka!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Pilih item dulu!", "Error", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        deleteButton.addActionListener(e -> {
+            int index = menuList.getSelectedIndex();
+            if (index >= 0) {
+                menuItems.remove(index);
+                refreshList();
+                clearFields(nameField, priceField);
+            } else {
+                JOptionPane.showMessageDialog(this, "Pilih item dulu!", "Error", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        menuList.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                int index = menuList.getSelectedIndex();
+                if (index >= 0) {
+                    MenuItem item = menuItems.get(index);
+                    nameField.setText(item.getName());
+                    priceField.setText(String.valueOf(item.getPrice()));
+                    categoryCombo.setSelectedItem(item.getCategory());
+                }
+            }
+        });
+    }
+    
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    /**
+     * @param args the command line arguments
+     */
+    private void refreshList() {
+        listModel.clear();
+        for (MenuItem item : menuItems) {
+            listModel.addElement(item.toString());
+        }
+    }
+    
+    private void clearFields(JTextField nameField, JTextField priceField) {
+        nameField.setText("");
+        priceField.setText("");
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}
