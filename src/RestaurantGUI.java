@@ -18,19 +18,28 @@ public class RestaurantGUI extends JFrame {
     private JList<String> menuList;
 
     public RestaurantGUI() {
-        setTitle("Restaurant Menu");
-        setSize(500, 400);
+        setTitle("Restaurant Menu - Modern UI");
+        setSize(600, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Komponen GUI
+        // Warna tema
+        Color primaryColor = new Color(30, 144, 255);  // Biru Dodger
+        Color dangerColor = new Color(220, 53, 69);    // Merah Bootstrap
+        Color backgroundColor = new Color(245, 245, 250);
+
+        // Font custom
+        Font titleFont = new Font("Segoe UI", Font.BOLD, 18);
+        Font buttonFont = new Font("Segoe UI", Font.PLAIN, 14);
+
         menuList = new JList<>(listModel);
-        menuList.setBackground(new Color(255, 228, 225)); // Warna pink muda
+        menuList.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        menuList.setBackground(new Color(230, 240, 255));
 
         JScrollPane scrollPane = new JScrollPane(menuList);
 
         JTextField nameField = new JTextField(20);
-        JTextField priceField = new JTextField(30);
+        JTextField priceField = new JTextField(20);
         String[] categories = {"Appetizer", "Main Course", "Dessert", "Beverage"};
         JComboBox<String> categoryCombo = new JComboBox<>(categories);
 
@@ -38,75 +47,44 @@ public class RestaurantGUI extends JFrame {
         JButton updateButton = new JButton("Update");
         JButton deleteButton = new JButton("Delete");
 
-        // Panel Form
-        JPanel formPanel = new JPanel(new GridLayout(4, 2, 5, 5));
-        formPanel.add(new JLabel("Nama:"));
+        addButton.setFont(buttonFont);
+        updateButton.setFont(buttonFont);
+        deleteButton.setFont(buttonFont);
+
+        styleButton(addButton, primaryColor, Color.WHITE);
+        styleButton(updateButton, new Color(255, 193, 7), Color.BLACK);
+        styleButton(deleteButton, dangerColor, Color.WHITE);
+
+        JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        formPanel.setBackground(backgroundColor);
+        formPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(primaryColor, 2), "Menu Form"));
+        formPanel.add(new JLabel("Nama Menu:"));
         formPanel.add(nameField);
-        formPanel.add(new JLabel("Harga:"));
+        formPanel.add(new JLabel("Harga (Rp):"));
         formPanel.add(priceField);
         formPanel.add(new JLabel("Kategori:"));
         formPanel.add(categoryCombo);
         formPanel.add(addButton);
         formPanel.add(updateButton);
 
-        // Panel Utama
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.setBackground(backgroundColor);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        JLabel headerLabel = new JLabel("Restaurant Menu");
+        headerLabel.setFont(titleFont);
+        headerLabel.setForeground(primaryColor);
+
+        mainPanel.add(headerLabel, BorderLayout.NORTH);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
         mainPanel.add(formPanel, BorderLayout.SOUTH);
         mainPanel.add(deleteButton, BorderLayout.EAST);
 
-        // Set background warna pink
-        Color pinkColor = new Color(255, 192, 203);
-        mainPanel.setBackground(pinkColor);
-        formPanel.setBackground(pinkColor);
-        menuList.setBackground(new Color(255, 228, 225)); // Pink lembut
-
         add(mainPanel);
 
-        // Event Handlers
-        addButton.addActionListener(e -> {
-            try {
-                String name = nameField.getText();
-                double price = Double.parseDouble(priceField.getText());
-                String category = (String) categoryCombo.getSelectedItem();
-
-                menuItems.add(new MenuItem(name, price, category));
-                refreshList();
-                clearFields(nameField, priceField);
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Harga harus angka!", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        updateButton.addActionListener(e -> {
-            int index = menuList.getSelectedIndex();
-            if (index >= 0) {
-                try {
-                    String name = nameField.getText();
-                    double price = Double.parseDouble(priceField.getText());
-                    String category = (String) categoryCombo.getSelectedItem();
-                    menuItems.set(index, new MenuItem(name, price, category));
-                    refreshList();
-                    clearFields(nameField, priceField);
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Harga harus angka!", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Pilih item dulu!", "Error", JOptionPane.WARNING_MESSAGE);
-            }
-        });
-
-        deleteButton.addActionListener(e -> {
-            int index = menuList.getSelectedIndex();
-            if (index >= 0) {
-                menuItems.remove(index);
-                refreshList();
-                clearFields(nameField, priceField);
-            } else {
-                JOptionPane.showMessageDialog(this, "Pilih item dulu!", "Error", JOptionPane.WARNING_MESSAGE);
-            }
-        });
+        addButton.addActionListener(e -> handleAdd(nameField, priceField, categoryCombo));
+        updateButton.addActionListener(e -> handleUpdate(nameField, priceField, categoryCombo));
+        deleteButton.addActionListener(e -> handleDelete(nameField, priceField));
 
         menuList.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
@@ -118,8 +96,9 @@ public class RestaurantGUI extends JFrame {
                     categoryCombo.setSelectedItem(item.getCategory());
                 }
             }
-        });
+        }); 
     }
+
     
 
     /**
@@ -150,18 +129,107 @@ public class RestaurantGUI extends JFrame {
     /**
      * @param args the command line arguments
      */
+       private void styleButton(JButton button, Color bgColor, Color fgColor) {
+        button.setBackground(bgColor);
+        button.setForeground(fgColor);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+    }
+
+    private void handleAdd(JTextField nameField, JTextField priceField, JComboBox<String> categoryCombo) {
+        try {
+            String name = nameField.getText().trim();
+            double price = Double.parseDouble(priceField.getText().trim());
+            String category = (String) categoryCombo.getSelectedItem();
+
+            if (name.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Nama menu tidak boleh kosong!", "Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            menuItems.add(new MenuItem(name, price, category));
+            refreshList();
+            clearFields(nameField, priceField);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Harga harus angka!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void handleUpdate(JTextField nameField, JTextField priceField, JComboBox<String> categoryCombo) {
+        int index = menuList.getSelectedIndex();
+        if (index >= 0) {
+            try {
+                String name = nameField.getText().trim();
+                double price = Double.parseDouble(priceField.getText().trim());
+                String category = (String) categoryCombo.getSelectedItem();
+                menuItems.set(index, new MenuItem(name, price, category));
+                refreshList();
+                clearFields(nameField, priceField);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Harga harus angka!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Pilih item dulu!", "Error", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void handleDelete(JTextField nameField, JTextField priceField) {
+        int index = menuList.getSelectedIndex();
+        if (index >= 0) {
+            menuItems.remove(index);
+            refreshList();
+            clearFields(nameField, priceField);
+        } else {
+            JOptionPane.showMessageDialog(this, "Pilih item dulu!", "Error", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
     private void refreshList() {
         listModel.clear();
         for (MenuItem item : menuItems) {
             listModel.addElement(item.toString());
         }
     }
-    
+
     private void clearFields(JTextField nameField, JTextField priceField) {
         nameField.setText("");
         priceField.setText("");
     }
 
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new RestaurantGUI().setVisible(true));
+    }
+}
+
+class MenuItem {
+    private String name;
+    private double price;
+    private String category;
+
+    public MenuItem(String name, double price, String category) {
+        this.name = name;
+        this.price = price;
+        this.category = category;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    @Override
+    public String toString() {
+        return name + " | " + category + " | Rp " + price;
+    }
+}
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
-}
+
